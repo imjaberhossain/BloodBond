@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages · BloodBond</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="font-body pb-24">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="max-w-2xl mx-auto px-4 pt-32">
+    <h1 class="text-3xl font-display font-extrabold text-white">💬 Messages</h1>
+    <p class="text-slate-400 text-sm mt-1">Your conversations with donors and recipients.</p>
+
+    <div class="mt-6 space-y-3">
+        <a th:each="c : ${conversations}" th:href="@{/chat/{id}(id=${c.user.id})}"
+           class="glass rounded-2xl p-4 shadow-glass card-hover flex items-center gap-4">
+            <div class="avatar-circle">
+                <img th:if="${c.user.avatarPath != null}" th:src="${c.user.avatarPath}" alt="">
+                <span th:unless="${c.user.avatarPath != null}" th:text="${#strings.substring(c.user.fullName,0,1)}"></span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-white font-semibold" th:text="${c.user.fullName}"></p>
+                <p class="text-sm text-slate-400 truncate"
+                   th:text="${c.lastMessage.sender.id == me.id ? 'You: ' : ''} + ${c.lastMessage.content}"></p>
+            </div>
+            <span class="text-xs text-slate-500" th:text="${#temporals.format(c.lastMessage.timestamp, 'dd MMM')}"></span>
+        </a>
+
+        <div th:if="${#lists.isEmpty(conversations)}" class="text-center text-slate-500 py-20 glass rounded-2xl">
+            <p class="text-5xl mb-3">💬</p>
+            <p class="text-white font-semibold">No conversations yet</p>
+            <p class="text-sm mt-1">Find a donor and hit “Message” to start chatting.</p>
+            <a th:href="@{/search}" class="btn-primary mt-5 inline-flex">Find donors</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

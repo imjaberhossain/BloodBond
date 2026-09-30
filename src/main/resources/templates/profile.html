@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${user.fullName} + ' · BloodBond'">Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+</head>
+<body class="font-body pb-24">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="max-w-4xl mx-auto px-4 pt-28">
+    <!-- Cover + header card -->
+    <div class="glass rounded-3xl shadow-glass overflow-hidden">
+        <div class="h-40 bg-gradient-to-r from-rose-600 via-rose-500 to-indigo-600 relative">
+            <div class="blob w-72 h-72 bg-white/20 -top-20 right-10"></div>
+        </div>
+        <div class="px-8 pb-8 -mt-14 relative">
+            <div class="flex flex-wrap items-end gap-5">
+                <div class="avatar-circle" style="width:7rem;height:7rem;font-size:2.5rem;border:4px solid #0b1020;">
+                    <img th:if="${user.avatarPath != null}" th:src="${user.avatarPath}" alt="">
+                    <span th:unless="${user.avatarPath != null}" th:text="${#strings.substring(user.fullName,0,1)}"></span>
+                </div>
+                <div class="flex-1 min-w-[200px]">
+                    <h1 class="text-3xl font-display font-extrabold text-white" th:text="${user.fullName}"></h1>
+                    <div class="flex flex-wrap items-center gap-3 mt-2">
+                        <span class="badge-blood" style="min-width:2.6rem;height:2.6rem;font-size:1rem;" th:text="${user.bloodGroup}"></span>
+                        <span class="badge-chip" id="badge-chip"><span id="badge-emoji" th:utext="${user.badgeEmoji}"></span> <span id="badge-text" th:text="${user.badge}"></span></span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <a th:if="${isOwner}" th:href="@{/profile/edit}" class="btn-ghost">✏️ Edit profile</a>
+                    <a th:unless="${isOwner}" th:href="@{/chat/{id}(id=${user.id})}" class="btn-primary">💬 Message</a>
+                </div>
+            </div>
+
+            <!-- Live stats -->
+            <div class="grid grid-cols-3 gap-4 mt-8">
+                <div class="glass rounded-2xl p-5 text-center">
+                    <p class="text-3xl font-display font-extrabold text-white" id="donation-count" th:text="${user.donationCount}">0</p>
+                    <p class="text-xs text-slate-400 mt-1">Donations made</p>
+                </div>
+                <div class="glass rounded-2xl p-5 text-center">
+                    <p class="text-3xl font-display font-extrabold text-white" th:text="${user.age != null ? user.age : '—'}">—</p>
+                    <p class="text-xs text-slate-400 mt-1">Age</p>
+                </div>
+                <div class="glass rounded-2xl p-5 text-center">
+                    <p class="text-3xl font-display font-extrabold text-white" th:text="${user.lastDonationDate != null ? #temporals.format(user.lastDonationDate, 'dd MMM yy') : '—'}">—</p>
+                    <p class="text-xs text-slate-400 mt-1">Last donation</p>
+                </div>
+            </div>
+
+            <div class="mt-6 grid md:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-5 text-sm text-slate-300 space-y-2">
+                    <p>📍 <span th:text="${user.city ?: 'Location not set'}"></span>
+                        <span th:if="${user.latitude != null}" class="text-slate-500" th:text="'(' + ${#numbers.formatDecimal(user.latitude,1,4)} + ', ' + ${#numbers.formatDecimal(user.longitude,1,4)} + ')'"></span></p>
+                    <p>📞 <span th:text="${user.phone ?: '—'}"></span></p>
+                    <p>🧬 <span th:text="${user.gender ?: '—'}"></span></p>
+                    <p>🚑 Donor status:
+                        <span th:if="${user.canDonate}" class="text-emerald-400 font-semibold">Available</span>
+                        <span th:unless="${user.canDonate}" class="text-slate-500 font-semibold">Unavailable</span></p>
+                </div>
+                <div class="glass rounded-2xl p-5 text-sm text-slate-300">
+                    <p class="text-slate-400 text-xs uppercase tracking-wide mb-2">Bio</p>
+                    <p th:text="${user.bio ?: 'This hero has not written a bio yet.'}"></p>
+                </div>
+            </div>
+
+            <div th:if="${isOwner}" class="mt-6 glass rounded-2xl p-5 flex flex-wrap items-center gap-4 justify-between">
+                <div>
+                    <p class="text-white font-semibold">Donated blood recently?</p>
+                    <p class="text-xs text-slate-400">Recording it updates your counter and badge in real time.</p>
+                </div>
+                <button onclick="recordDonation()" class="btn-primary">🩸 I donated today</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts -->
+    <h2 class="text-xl font-display font-bold text-white mt-10 mb-5">Recent posts</h2>
+    <div class="space-y-5">
+        <div th:each="p : ${posts}" class="glass rounded-2xl p-5">
+            <p class="text-sm text-slate-200 whitespace-pre-line" th:text="${p.content}"></p>
+            <img th:if="${p.imagePath != null}" th:src="${p.imagePath}" class="mt-3 rounded-xl max-h-80 w-full object-cover" alt="">
+            <p class="text-xs text-slate-500 mt-3" th:text="${#temporals.format(p.createdAt, 'dd MMM yyyy · hh:mm a')}"></p>
+        </div>
+        <div th:if="${#lists.isEmpty(posts)}" class="text-center text-slate-500 py-10 glass rounded-2xl">No posts yet.</div>
+    </div>
+</main>
+
+<script th:inline="javascript" src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+<script>
+const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+const userId = [[${user.id}]];
+
+function recordDonation() {
+    fetch('/profile/donation/record', {
+        method: 'POST',
+        headers: {[csrfHeader]: csrfToken}
+    }).then(r => r.json()).then(s => {
+        document.getElementById('donation-count').textContent = s.donations;
+        document.getElementById('badge-text').textContent = s.badge;
+        document.getElementById('badge-emoji').textContent = s.badgeEmoji;
+    });
+}
+
+// Live updates: when the donation count changes, update the UI instantly
+const socket = new SockJS('/ws');
+const stompClient = new StompJs.Client({ webSocketFactory: () => socket });
+stompClient.onConnect = () => {
+    stompClient.subscribe('/topic/user/' + userId + '/stats', msg => {
+        const s = JSON.parse(msg.body);
+        document.getElementById('donation-count').textContent = s.donations;
+        document.getElementById('badge-text').textContent = s.badge;
+        document.getElementById('badge-emoji').textContent = s.badgeEmoji;
+    });
+};
+stompClient.activate();
+</script>
+</body>
+</html>

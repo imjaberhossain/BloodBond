@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed · BloodBond</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+</head>
+<body class="font-body pb-24">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="max-w-2xl mx-auto px-4 pt-32">
+    <div th:if="${message}" class="alert-ok mb-5 auto-dismiss" th:text="${message}"></div>
+
+    <!-- Composer -->
+    <div class="glass rounded-2xl p-5 shadow-glass">
+        <form th:action="@{/posts}" method="post" enctype="multipart/form-data" class="flex gap-3 items-start">
+            <div class="avatar-circle">
+                <img th:if="${me.avatarPath != null}" th:src="${me.avatarPath}" alt="me">
+                <span th:unless="${me.avatarPath != null}" th:text="${#strings.substring(me.fullName,0,1)}"></span>
+            </div>
+            <div class="flex-1">
+                <textarea name="content" rows="3" required maxlength="5000" class="input-dark resize-none"
+                          placeholder="Share a donation moment…"></textarea>
+                <div class="flex items-center justify-between mt-3">
+                    <label class="text-xs text-slate-400 cursor-pointer hover:text-rose-300 flex items-center gap-1.5">
+                        📷 Add photo
+                        <input type="file" name="image" accept="image/*" class="hidden">
+                    </label>
+                    <button type="submit" class="btn-primary">Post</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Posts -->
+    <div class="mt-8 space-y-6">
+        <div th:each="pv : ${posts}" class="glass rounded-2xl p-5 shadow-glass">
+            <div class="flex items-center gap-3">
+                <a th:href="@{/users/{id}(id=${pv.post.author.id})}" class="avatar-circle">
+                    <img th:if="${pv.post.author.avatarPath != null}" th:src="${pv.post.author.avatarPath}" alt="">
+                    <span th:unless="${pv.post.author.avatarPath != null}" th:text="${#strings.substring(pv.post.author.fullName,0,1)}"></span>
+                </a>
+                <div>
+                    <a th:href="@{/users/{id}(id=${pv.post.author.id})}" class="text-white font-semibold hover:text-rose-300"
+                       th:text="${pv.post.author.fullName}"></a>
+                    <p class="text-xs text-slate-500"
+                       th:text="${#temporals.format(pv.post.createdAt, 'dd MMM yyyy · hh:mm a')}"></p>
+                </div>
+                <form th:if="${pv.post.author.id == me.id}" th:action="@{/posts/{id}/delete(id=${pv.post.id})}" method="post" class="ml-auto">
+                    <button type="submit" class="text-xs text-slate-500 hover:text-rose-400" title="Delete post">✕ Delete</button>
+                </form>
+            </div>
+
+            <p class="mt-4 text-slate-200 text-sm whitespace-pre-line" th:text="${pv.post.content}"></p>
+            <img th:if="${pv.post.imagePath != null}" th:src="${pv.post.imagePath}" class="mt-4 rounded-xl max-h-96 w-full object-cover" alt="post image">
+
+            <!-- Reactions -->
+            <div class="mt-4 pt-4 border-t border-white/10">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button class="react-btn" th:classappend="${pv.myReaction == 'LIKE'} ? 'active'"
+                            th:onclick="|react(${pv.post.id}, 'LIKE', this)|">👍 <span th:text="${pv.reactionCounts['LIKE'] ?: 0}">0</span></button>
+                    <button class="react-btn" th:classappend="${pv.myReaction == 'LOVE'} ? 'active'"
+                            th:onclick="|react(${pv.post.id}, 'LOVE', this)|">❤️ <span th:text="${pv.reactionCounts['LOVE'] ?: 0}">0</span></button>
+                    <button class="react-btn" th:classappend="${pv.myReaction == 'CLAP'} ? 'active'"
+                            th:onclick="|react(${pv.post.id}, 'CLAP', this)|">👏 <span th:text="${pv.reactionCounts['CLAP'] ?: 0}">0</span></button>
+                    <button class="react-btn" th:classappend="${pv.myReaction == 'PRAY'} ? 'active'"
+                            th:onclick="|react(${pv.post.id}, 'PRAY', this)|">🙏 <span th:text="${pv.reactionCounts['PRAY'] ?: 0}">0</span></button>
+                </div>
+
+                <!-- Comments -->
+                <div class="mt-4 space-y-3" th:id="|comments-${pv.post.id}|">
+                    <div th:each="c : ${pv.comments}" class="flex gap-2.5 text-sm">
+                        <div class="avatar-circle" style="width:2rem;height:2rem;font-size:.8rem;">
+                            <img th:if="${c.author.avatarPath != null}" th:src="${c.author.avatarPath}" alt="">
+                            <span th:unless="${c.author.avatarPath != null}" th:text="${#strings.substring(c.author.fullName,0,1)}"></span>
+                        </div>
+                        <div class="glass rounded-xl px-3 py-2">
+                            <p class="text-xs font-semibold text-rose-300" th:text="${c.author.fullName}"></p>
+                            <p class="text-slate-200" th:text="${c.content}"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <input type="text" th:id="|comment-input-${pv.post.id}|" class="input-dark text-sm" placeholder="Write a comment…"
+                           th:onkeypress="|if(event.key==='Enter'){addComment(${pv.post.id})}|">
+                    <button type="button" class="btn-ghost text-sm" th:onclick="|addComment(${pv.post.id})">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(posts)}" class="text-center text-slate-500 py-16">
+            <p class="text-4xl mb-3">🩸</p> No posts yet — be the first to share!
+        </div>
+    </div>
+</main>
+
+<script>
+const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+function react(postId, type, btn) {
+    fetch('/posts/' + postId + '/react', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', [csrfHeader]: csrfToken},
+        body: JSON.stringify({type: type})
+    }).then(r => r.json()).then(() => location.reload());
+}
+
+function addComment(postId) {
+    const input = document.getElementById('comment-input-' + postId);
+    const content = input.value.trim();
+    if (!content) return;
+    fetch('/posts/' + postId + '/comment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', [csrfHeader]: csrfToken},
+        body: JSON.stringify({content: content})
+    }).then(r => r.json()).then(c => {
+        const list = document.getElementById('comments-' + postId);
+        const div = document.createElement('div');
+        div.className = 'flex gap-2.5 text-sm';
+        div.innerHTML = '<div class="avatar-circle" style="width:2rem;height:2rem;font-size:.8rem;">' +
+            (c.avatar ? '<img src="' + c.avatar + '">' : '<span>' + c.author.charAt(0) + '</span>') + '</div>' +
+            '<div class="glass rounded-xl px-3 py-2"><p class="text-xs font-semibold text-rose-300">' + c.author +
+            '</p><p class="text-slate-200">' + c.content + '</p></div>';
+        list.appendChild(div);
+        input.value = '';
+    });
+}
+</script>
+</body>
+</html>

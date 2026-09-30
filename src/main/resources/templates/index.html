@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloodBond — Every Drop Counts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: {
+                fontFamily: { display: ['Sora', 'sans-serif'], body: ['Inter', 'sans-serif'] }
+            }}
+        };
+    </script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="font-body">
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<!-- HERO -->
+<header class="relative pt-40 pb-24 px-6 overflow-hidden">
+    <div class="blob w-[500px] h-[500px] bg-rose-600 -top-40 -left-40"></div>
+    <div class="blob w-[400px] h-[400px] bg-indigo-600 top-40 right-0"></div>
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-14 items-center relative">
+        <div>
+            <span class="badge-chip mb-6">🌍 The Blood Donor Social Network</span>
+            <h1 class="text-5xl md:text-6xl font-extrabold leading-tight text-white hero-gradient-text">
+                Every drop<br>counts. Every<br>donor matters.
+            </h1>
+            <p class="mt-6 text-slate-300 text-lg max-w-md">
+                Connect with verified blood donors near you, respond to emergencies in real time,
+                share your journey and earn badges for every life you save.
+            </p>
+            <div class="mt-8 flex flex-wrap gap-4">
+                <a sec:authorize="!isAuthenticated()" th:href="@{/auth/signup}" class="btn-primary text-base px-7 py-3">Become a Donor</a>
+                <a sec:authorize="isAuthenticated()" th:href="@{/home}" class="btn-primary text-base px-7 py-3">Open Feed</a>
+                <a th:href="@{/auth/login}" class="btn-ghost text-base px-7 py-3">Find Blood Now</a>
+            </div>
+            <p class="mt-6 text-sm text-slate-400">🩸 One donation can save up to <span class="text-rose-300 font-semibold">3 lives</span></p>
+        </div>
+        <div class="glass rounded-3xl p-8 shadow-glass card-hover">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="badge-blood">O−</div>
+                <div>
+                    <p class="font-display font-bold text-white">Emergency nearby</p>
+                    <p class="text-sm text-slate-400">2 units needed · 1.2 km away</p>
+                </div>
+                <span class="ml-auto text-xs bg-rose-500/20 text-rose-300 border border-rose-500/40 rounded-full px-3 py-1 font-semibold">LIVE</span>
+            </div>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between items-center glass rounded-xl px-4 py-3">
+                    <span class="text-slate-300">Jaber H. responded</span><span class="text-emerald-400 font-semibold">Accepted ✓</span>
+                </div>
+                <div class="flex justify-between items-center glass rounded-xl px-4 py-3">
+                    <span class="text-slate-300">Ambulance dispatched</span><span class="text-rose-300 font-semibold">En route 🚑</span>
+                </div>
+                <div class="flex justify-between items-center glass rounded-xl px-4 py-3">
+                    <span class="text-slate-300">Donation completed</span><span class="text-emerald-400 font-semibold">3 lives saved ❤️</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- LIVE STATS -->
+<section class="px-6 pb-20">
+    <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-5">
+        <div class="glass rounded-2xl p-6 text-center card-hover">
+            <p class="text-4xl font-display font-extrabold text-white" th:attr="data-count=${totalDonors}">0</p>
+            <p class="text-slate-400 text-sm mt-1">Verified Donors</p>
+        </div>
+        <div class="glass rounded-2xl p-6 text-center card-hover">
+            <p class="text-4xl font-display font-extrabold text-white" th:attr="data-count=${totalDonations}">0</p>
+            <p class="text-slate-400 text-sm mt-1">Total Donations</p>
+        </div>
+        <div class="glass rounded-2xl p-6 text-center card-hover">
+            <p class="text-4xl font-display font-extrabold text-white" th:attr="data-count=${livesImpacted}">0</p>
+            <p class="text-slate-400 text-sm mt-1">Lives Impacted</p>
+        </div>
+        <div class="glass rounded-2xl p-6 text-center card-hover">
+            <p class="text-4xl font-display font-extrabold text-white" th:attr="data-count=${openEmergencies}">0</p>
+            <p class="text-slate-400 text-sm mt-1">Open Emergencies</p>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="px-6 pb-20">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-3xl font-display font-bold text-white text-center">Why <span class="text-rose-400">BloodBond?</span></h2>
+        <div class="grid md:grid-cols-3 gap-6 mt-12">
+            <div class="glass rounded-2xl p-7 card-hover">
+                <div class="text-4xl mb-4">📍</div>
+                <h3 class="font-display font-bold text-white text-lg">Geo-Smart Search</h3>
+                <p class="text-slate-400 text-sm mt-2">Find compatible donors within exact kilometres using real coordinates — not guesses.</p>
+            </div>
+            <div class="glass rounded-2xl p-7 card-hover">
+                <div class="text-4xl mb-4">⚡</div>
+                <h3 class="font-display font-bold text-white text-lg">Emergency Board</h3>
+                <p class="text-slate-400 text-sm mt-2">Post urgent requests with patient details and location. Requests auto-expire when resolved.</p>
+            </div>
+            <div class="glass rounded-2xl p-7 card-hover">
+                <div class="text-4xl mb-4">🏆</div>
+                <h3 class="font-display font-bold text-white text-lg">Gamified Heroes</h3>
+                <p class="text-slate-400 text-sm mt-2">Live donation counters and auto-upgrading badges from Bronze to Diamond Guardian.</p>
+            </div>
+            <div class="glass rounded-2xl p-7 card-hover">
+                <div class="text-4xl mb-4">💬</div>
+                <h3 class="font-display font-bold text-white text-lg">Real-time Chat</h3>
+                <p class="text-slate-400 text-sm mt-2">WhatsApp-style instant messaging over WebSockets. No phone number sharing needed.</p>
+            </div>
+            <div class="glass rounded-2xl p-7 card-hover">
+                <div class="text-4xl mb-4">🛡️</div>
+                <h3 class="font-display font-bold text-white text-lg">Verified & Secure</h3>
+                <p class="text-slate-400 text-sm mt-2">OTP-verified accounts, BCrypt-encrypted passwords and Spring Security on every page.</p>
+            </div>
+            <div class="glass rounded-2xl p-7 card-hover">
+                <div class="text-4xl mb-4">📈</div>
+                <h3 class="font-display font-bold text-white text-lg">Social Feed</h3>
+                <p class="text-slate-400 text-sm mt-2">Share donation moments, react and comment — building a community that keeps giving.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SMART FACTS -->
+<section class="px-6 pb-20">
+    <div class="max-w-6xl mx-auto glass rounded-3xl p-10 grid md:grid-cols-2 gap-10 items-center">
+        <div>
+            <h2 class="text-3xl font-display font-bold text-white">Smart facts</h2>
+            <ul class="mt-6 space-y-4 text-slate-300 text-sm">
+                <li class="flex gap-3"><span>🩸</span> Your body replaces the fluid lost within 24 hours of donating.</li>
+                <li class="flex gap-3"><span>🅾️</span> Type O− red cells can be transfused to anyone — universal donors are rare heroes.</li>
+                <li class="flex gap-3"><span>⏱️</span> Someone needs blood every 2 seconds somewhere in the world.</li>
+                <li class="flex gap-3"><span>🧬</span> AB+ plasma can be given to patients of every blood group.</li>
+                <li class="flex gap-3"><span>📅</span> A healthy adult can safely donate whole blood every 3 months.</li>
+            </ul>
+        </div>
+        <div class="glass rounded-2xl p-6">
+            <h3 class="font-display font-bold text-white mb-4 text-center">Compatibility cheat-sheet</h3>
+            <table class="w-full text-sm text-center">
+                <thead>
+                <tr class="text-rose-300 font-semibold border-b border-white/10">
+                    <th class="py-2">Type</th><th>Can donate to</th><th>Can receive from</th>
+                </tr>
+                </thead>
+                <tbody class="text-slate-300">
+                <tr class="border-b border-white/5"><td class="py-2 font-bold text-white">O−</td><td>Everyone</td><td>O−</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 font-bold text-white">O+</td><td>O+, A+, B+, AB+</td><td>O+, O−</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 font-bold text-white">A−</td><td>A−, A+, AB−, AB+</td><td>A−, O−</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 font-bold text-white">B−</td><td>B−, B+, AB−, AB+</td><td>B−, O−</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 font-bold text-white">AB−</td><td>AB−, AB+</td><td>AB−, A−, B−, O−</td></tr>
+                <tr><td class="py-2 font-bold text-white">AB+</td><td>AB+</td><td>Everyone</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="px-6 pb-24">
+    <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-4xl font-display font-extrabold text-white">Ready to be someone's <span class="text-rose-400">hero?</span></h2>
+        <p class="text-slate-400 mt-4">Join thousands of donors making emergencies shorter and lives longer.</p>
+        <a sec:authorize="!isAuthenticated()" th:href="@{/auth/signup}" class="btn-primary text-base px-8 py-3 mt-8">Create free account</a>
+        <a sec:authorize="isAuthenticated()" th:href="@{/home}" class="btn-primary text-base px-8 py-3 mt-8">Go to your feed</a>
+    </div>
+</section>
+
+<footer class="border-t border-white/10 py-8 text-center text-sm text-slate-500">
+    🩸 BloodBond — a dream project of
+    <a href="https://facebook.com/imjaberhossainfarzi"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="text-slate-300 hover:text-rose-400 font-medium transition-colors underline decoration-rose-500/40 underline-offset-4">
+        Jaber Hossain Farazi
+    </a>
+    · Donate blood, save lives.
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

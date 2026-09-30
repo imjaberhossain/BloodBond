@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Chat with ' + ${other.fullName} + ' · BloodBond'">Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+</head>
+<body class="font-body pb-24">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="max-w-2xl mx-auto px-4 pt-28">
+    <div class="glass rounded-3xl shadow-glass overflow-hidden flex flex-col" style="height:75vh;">
+        <!-- Header -->
+        <div class="flex items-center gap-3 px-5 py-4 border-b border-white/10 bg-white/5">
+            <a th:href="@{/chat}" class="icon-btn" style="width:2.2rem;height:2.2rem;">←</a>
+            <a th:href="@{/users/{id}(id=${other.id})}" class="avatar-circle" style="width:2.6rem;height:2.6rem;">
+                <img th:if="${other.avatarPath != null}" th:src="${other.avatarPath}" alt="">
+                <span th:unless="${other.avatarPath != null}" th:text="${#strings.substring(other.fullName,0,1)}"></span>
+            </a>
+            <div class="flex-1">
+                <p class="text-white font-semibold text-sm" th:text="${other.fullName}"></p>
+                <p class="text-xs text-emerald-400" id="status-text">online</p>
+            </div>
+            <button class="icon-btn" onclick="alert('Voice calls are coming soon! 🎙️')" title="Voice call">📞</button>
+            <button class="icon-btn" onclick="alert('Video calls are coming soon! 📹')" title="Video call">🎥</button>
+        </div>
+
+        <!-- Messages -->
+        <div id="messages" class="flex-1 overflow-y-auto px-5 py-5 space-y-3"></div>
+
+        <!-- Composer -->
+        <div class="px-4 py-3 border-t border-white/10 bg-white/5 flex gap-2">
+            <input id="message-input" type="text" class="input-dark text-sm" placeholder="Type a message…"
+                   onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()" class="btn-primary">Send</button>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript" src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+<script>
+const otherId = [[${other.id}]];
+const myId = [[${me.id}]];
+const conversationKey = '[[${conversationKey}]]';
+const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+const messagesDiv = document.getElementById('messages');
+const input = document.getElementById('message-input');
+
+function addBubble(m) {
+    const mine = m.sender.id === myId || m.senderId === myId;
+    const wrap = document.createElement('div');
+    wrap.className = 'flex ' + (mine ? 'justify-end' : 'justify-start');
+    const bubble = document.createElement('div');
+    bubble.className = mine ? 'bubble-me' : 'bubble-other';
+    bubble.textContent = m.content;
+    wrap.appendChild(bubble);
+    messagesDiv.appendChild(wrap);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// Load history
+fetch('/api/chat/' + otherId + '/history')
+    .then(r => r.json())
+    .then(list => { list.forEach(addBubble); messagesDiv.scrollTop = messagesDiv.scrollHeight; });
+
+// Real-time over WebSocket
+const socket = new SockJS('/ws');
+const stompClient = new StompJs.Client({ webSocketFactory: () => socket, reconnectDelay: 3000 });
+stompClient.onConnect = () => {
+    stompClient.subscribe('/topic/chat/' + conversationKey, msg => addBubble(JSON.parse(msg.body)));
+};
+stompClient.activate();
+
+function sendMessage() {
+    const content = input.value.trim();
+    if (!content) return;
+    fetch('/api/chat/' + otherId + '/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', [csrfHeader]: csrfToken},
+        body: JSON.stringify({content: content})
+    }).then(r => r.json()).then(m => { input.value = ''; });
+}
+</script>
+</body>
+</html>

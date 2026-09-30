@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up · BloodBond</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="font-body flex items-center justify-center min-h-screen px-4 py-24">
+<div class="blob w-[400px] h-[400px] bg-rose-600 top-0 left-0"></div>
+<div class="blob w-[350px] h-[350px] bg-indigo-600 bottom-0 right-0"></div>
+
+<div class="glass rounded-3xl shadow-glass p-10 w-full max-w-lg relative">
+    <a th:href="@{/}" class="font-display text-2xl font-bold text-white flex items-center gap-2 justify-center">
+        <span>🩸</span> Blood<span class="text-rose-400">Bond</span>
+    </a>
+    <h1 class="text-center text-white font-display font-bold text-xl mt-6">Join the network</h1>
+    <p class="text-center text-slate-400 text-sm mt-1">One account — donate and receive blood</p>
+
+    <div th:if="${error}" class="alert-err mt-6" th:text="${error}"></div>
+
+    <form th:action="@{/auth/signup}" method="post" class="mt-8 space-y-4">
+        <div>
+            <label class="text-sm text-slate-300 block mb-1.5">Full name</label>
+            <input type="text" name="fullName" required class="input-dark" placeholder="Your full name">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Email</label>
+                <input type="email" name="email" required class="input-dark" placeholder="you@example.com">
+            </div>
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Phone</label>
+                <input type="text" name="phone" required class="input-dark" placeholder="01XXXXXXXXX">
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Blood group</label>
+                <select name="bloodGroup" required class="input-dark">
+                    <option value="">Select…</option>
+                    <option>A+</option><option>A−</option><option>B+</option><option>B−</option>
+                    <option>O+</option><option>O−</option><option>AB+</option><option>AB−</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Date of birth</label>
+                <input type="date" name="dateOfBirth" class="input-dark">
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Gender</label>
+                <select name="gender" class="input-dark">
+                    <option value="">Select…</option>
+                    <option>Male</option><option>Female</option><option>Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">City</label>
+                <input type="text" name="city" class="input-dark" placeholder="Dhaka">
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Password</label>
+                <input type="password" name="password" required minlength="6" class="input-dark" placeholder="Min 6 characters">
+            </div>
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Confirm password</label>
+                <input type="password" name="confirmPassword" required class="input-dark" placeholder="Repeat password">
+            </div>
+        </div>
+        <button type="submit" class="btn-primary w-full justify-center py-3 text-base">Create account</button>
+    </form>
+
+    <p class="text-center text-sm text-slate-400 mt-6">
+        Already registered? <a th:href="@{/auth/login}" class="text-rose-300 font-semibold hover:underline">Log in</a>
+    </p>
+</div>
+</body>
+</html>

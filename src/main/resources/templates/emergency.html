@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Board · BloodBond</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="font-body pb-24">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="max-w-4xl mx-auto px-4 pt-32">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-display font-extrabold text-white">🚨 Emergency Board</h1>
+            <p class="text-slate-400 text-sm mt-1">Urgent blood requests from people near you. Requests auto-expire.</p>
+        </div>
+        <a th:href="@{/emergency/new}" class="btn-primary">+ Post a request</a>
+    </div>
+
+    <div th:if="${message}" class="alert-ok mt-6 auto-dismiss" th:text="${message}"></div>
+
+    <div class="mt-8 space-y-5">
+        <div th:each="v : ${requests}" class="glass rounded-2xl p-6 shadow-glass card-hover"
+             th:classappend="${v.request.bloodGroup == me.bloodGroup} ? 'ring-2 ring-rose-500/60'">
+            <div class="flex flex-wrap gap-5">
+                <div class="badge-blood" th:text="${v.request.bloodGroup}"></div>
+                <div class="flex-1 min-w-[220px]">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="text-xl font-display font-bold text-white" th:text="${v.request.patientName}"></h3>
+                        <span class="text-xs bg-rose-500/15 border border-rose-500/40 text-rose-300 rounded-full px-2.5 py-0.5 font-semibold">URGENT</span>
+                        <span th:if="${v.request.bloodGroup == me.bloodGroup}" class="text-xs bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 rounded-full px-2.5 py-0.5 font-semibold">Matches your group!</span>
+                    </div>
+                    <p class="text-sm text-slate-300 mt-1">
+                        Needs <span class="text-white font-semibold" th:text="${v.request.unitsNeeded}"></span> unit(s)
+                        at <span class="text-white font-semibold" th:text="${v.request.hospitalName}"></span>
+                    </p>
+                    <p class="text-xs text-slate-500 mt-1">📍 <span th:text="${v.request.address}"></span></p>
+                    <p th:if="${v.request.note != null && !#strings.isEmpty(v.request.note)}"
+                       class="text-sm text-slate-300 mt-2 italic" th:text="${'“' + v.request.note + '”'}"></p>
+                    <p class="text-xs text-slate-500 mt-2">
+                        Posted by <a class="text-rose-300 hover:underline" th:href="@{/users/{id}(id=${v.request.requester.id})}"
+                                     th:text="${v.request.requester.fullName}"></a>
+                        · ⏳ <span th:if="${v.minutesLeft != null}" th:text="${(v.minutesLeft / 60) + 'h ' + (v.minutesLeft % 60) + 'm left'}"></span>
+                        <span th:unless="${v.minutesLeft != null}">no expiry</span>
+                    </p>
+                </div>
+                <div class="flex flex-col gap-2 items-end">
+                    <p th:if="${v.distanceKm != null}" class="text-sm text-slate-300">
+                        📏 <span class="text-white font-semibold" th:text="${#numbers.formatDecimal(v.distanceKm,1,1)}"></span> km away
+                    </p>
+                    <p th:unless="${v.distanceKm != null}" class="text-sm text-slate-500">📏 distance n/a</p>
+                    <a class="btn-ghost text-sm" target="_blank" rel="noopener"
+                       th:if="${v.request.latitude != null}"
+                       th:href="|https://www.google.com/maps/dir/?api=1&destination=${v.request.latitude},${v.request.longitude}|">🧭 Directions</a>
+                    <a class="btn-primary text-sm" th:href="@{${'tel:' + v.request.contactPhone}}">📞 Call now</a>
+                    <a class="btn-ghost text-sm" th:href="@{/chat/{id}(id=${v.request.requester.id})}">💬 Chat</a>
+                    <form th:if="${v.request.requester.id == me.id || me.role.name() == 'ADMIN'}"
+                          th:action="@{/emergency/{id}/fulfilled(id=${v.request.id})}" method="post">
+                        <button type="submit" class="text-xs text-emerald-400 hover:underline">✓ Mark fulfilled</button>
+                    </form>
+                    <form th:if="${v.request.requester.id == me.id || me.role.name() == 'ADMIN'}"
+                          th:action="@{/emergency/{id}/delete(id=${v.request.id})}" method="post">
+                        <button type="submit" class="text-xs text-slate-500 hover:text-rose-400">✕ Remove</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(requests)}" class="text-center text-slate-500 py-20 glass rounded-2xl">
+            <p class="text-5xl mb-4">✅</p>
+            <p class="text-white font-semibold">No open emergencies right now</p>
+            <p class="text-sm mt-1">That's great news. Check back later or post a request if you need help.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Optional: run PostgreSQL with one command (if you don't want to install pgAdmin locally)
+# docker compose up -d
+services:
+  postgres:
+    image: postgres:16
+    container_name: bloodbond-db
+    environment:
+      POSTGRES_DB: bloodbond
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

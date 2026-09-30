@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Donors · BloodBond</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="font-body pb-24">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="max-w-4xl mx-auto px-4 pt-32">
+    <h1 class="text-3xl font-display font-extrabold text-white">🔍 Find donors</h1>
+    <p class="text-slate-400 text-sm mt-1">Search verified donors by blood group — nearest ones appear first.</p>
+
+    <form th:action="@{/search}" method="get" class="glass rounded-2xl p-5 mt-6 shadow-glass flex flex-wrap gap-4 items-end">
+        <div class="flex-1 min-w-[180px]">
+            <label class="text-sm text-slate-300 block mb-1.5">Blood group</label>
+            <select name="bloodGroup" class="input-dark">
+                <option value="">All groups</option>
+                <option th:each="g : ${ {'A+','A−','B+','B−','O+','O−','AB+','AB−'} }" th:value="${g}" th:text="${g}"
+                        th:selected="${g == bloodGroup}"></option>
+            </select>
+        </div>
+        <button type="submit" class="btn-primary">Search</button>
+    </form>
+
+    <div th:unless="${locationReady}" class="alert-err mt-6">
+        ⚠️ Location not set. Click <a th:href="@{/profile/edit}" class="underline font-semibold">📡 Use my current location</a>
+        in your profile so we can sort donors by distance.
+    </div>
+
+    <div class="mt-8 space-y-4">
+        <div th:each="r : ${results}" class="glass rounded-2xl p-5 shadow-glass card-hover flex flex-wrap items-center gap-4">
+            <a th:href="@{/users/{id}(id=${r.user.id})}" class="avatar-circle" style="width:3.5rem;height:3.5rem;font-size:1.3rem;">
+                <img th:if="${r.user.avatarPath != null}" th:src="${r.user.avatarPath}" alt="">
+                <span th:unless="${r.user.avatarPath != null}" th:text="${#strings.substring(r.user.fullName,0,1)}"></span>
+            </a>
+            <div class="flex-1 min-w-[180px]">
+                <a th:href="@{/users/{id}(id=${r.user.id})}" class="text-white font-semibold hover:text-rose-300" th:text="${r.user.fullName}"></a>
+                <p class="text-xs text-slate-400 mt-0.5">
+                    📍 <span th:text="${r.user.city ?: '—'}"></span>
+                    · <span th:text="${r.user.donationCount}"></span> donations
+                    · <span class="text-amber-300" th:text="${r.user.badge}"></span>
+                </p>
+            </div>
+            <div class="text-right">
+                <span class="badge-blood" style="min-width:2.4rem;height:2.4rem;font-size:.9rem;" th:text="${r.user.bloodGroup}"></span>
+                <p class="text-xs text-slate-400 mt-1.5">
+                    <span th:if="${r.distanceKm != null}">📏 <span class="text-white font-semibold" th:text="${#numbers.formatDecimal(r.distanceKm,1,1)}"></span> km away</span>
+                    <span th:unless="${r.distanceKm != null}">📏 distance n/a</span>
+                </p>
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+                <a th:href="@{/chat/{id}(id=${r.user.id})}" class="btn-primary text-sm">💬 Message</a>
+                <a th:if="${r.user.phone != null}" th:href="@{${'tel:' + r.user.phone}}" class="btn-ghost text-sm">📞</a>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(results)}" class="text-center text-slate-500 py-16 glass rounded-2xl">
+            <p class="text-5xl mb-3">🩸</p> No donors found for this blood group yet.
+        </div>
+    </div>
+</main>
+</body>
+</html>

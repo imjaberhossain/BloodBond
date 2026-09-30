@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit profile · BloodBond</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="font-body pb-24">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="max-w-2xl mx-auto px-4 pt-32">
+    <div class="glass rounded-3xl shadow-glass p-8">
+        <h1 class="text-2xl font-display font-bold text-white">Edit profile</h1>
+        <p class="text-sm text-slate-400 mt-1">Your location powers the geo-search. Use the button below to grab your device's GPS automatically.</p>
+
+        <form th:action="@{/profile/edit}" method="post" enctype="multipart/form-data" class="mt-7 space-y-5">
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Profile photo</label>
+                <input type="file" name="avatar" accept="image/*" class="input-dark file:mr-4 file:bg-rose-600 file:border-0 file:text-white file:px-4 file:py-1.5 file:rounded-full file:text-xs file:font-semibold">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm text-slate-300 block mb-1.5">Full name</label>
+                    <input type="text" name="fullName" th:value="${user.fullName}" required class="input-dark">
+                </div>
+                <div>
+                    <label class="text-sm text-slate-300 block mb-1.5">Phone</label>
+                    <input type="text" name="phone" th:value="${user.phone}" class="input-dark">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm text-slate-300 block mb-1.5">Blood group</label>
+                    <select name="bloodGroup" class="input-dark">
+                        <option th:each="g : ${ {'A+','A−','B+','B−','O+','O−','AB+','AB−'} }"
+                                th:value="${g}" th:text="${g}" th:selected="${g == user.bloodGroup}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm text-slate-300 block mb-1.5">Date of birth</label>
+                    <input type="date" name="dateOfBirth" th:value="${user.dateOfBirth}" class="input-dark">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm text-slate-300 block mb-1.5">Gender</label>
+                    <select name="gender" class="input-dark">
+                        <option value="">Select…</option>
+                        <option th:each="g : ${ {'Male','Female','Other'} }" th:value="${g}" th:text="${g}" th:selected="${g == user.gender}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm text-slate-300 block mb-1.5">City</label>
+                    <input type="text" name="city" th:value="${user.city}" class="input-dark">
+                </div>
+            </div>
+
+            <!-- LOCATION (auto-filled from device GPS) -->
+            <div class="glass rounded-2xl p-5 border border-rose-500/30">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="text-white font-semibold text-sm">📍 My location</p>
+                        <p class="text-xs text-slate-400">Needed to show your exact distance to others.</p>
+                    </div>
+                    <button type="button" onclick="useMyLocation()" id="gps-btn" class="btn-primary text-sm">📡 Use my current location</button>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Latitude</label>
+                        <input type="number" step="any" id="lat-input" name="latitude" th:value="${user.latitude}" class="input-dark" placeholder="auto-filled">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Longitude</label>
+                        <input type="number" step="any" id="lng-input" name="longitude" th:value="${user.longitude}" class="input-dark" placeholder="auto-filled">
+                    </div>
+                </div>
+                <p id="gps-status" class="text-xs text-slate-500 mt-2"></p>
+            </div>
+
+            <div>
+                <label class="text-sm text-slate-300 block mb-1.5">Bio</label>
+                <textarea name="bio" rows="3" class="input-dark resize-none" th:text="${user.bio}"></textarea>
+            </div>
+            <label class="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="canDonate" value="true" th:checked="${user.canDonate}" class="w-4 h-4 accent-rose-500">
+                I am available to donate blood now
+            </label>
+            <div class="flex gap-3">
+                <button type="submit" class="btn-primary">Save changes</button>
+                <a th:href="@{/users/{id}(id=${user.id})}" class="btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+function useMyLocation() {
+    const status = document.getElementById('gps-status');
+    if (!navigator.geolocation) {
+        status.textContent = '⚠️ Geolocation is not supported by this browser.';
+        return;
+    }
+    document.getElementById('gps-btn').disabled = true;
+    status.textContent = '⏳ Detecting your location…';
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            document.getElementById('lat-input').value = pos.coords.latitude.toFixed(6);
+            document.getElementById('lng-input').value = pos.coords.longitude.toFixed(6);
+            status.textContent = '✅ Location captured (accuracy ~' + Math.round(pos.coords.accuracy) + ' m). Now press Save changes.';
+            document.getElementById('gps-btn').disabled = false;
+        },
+        err => {
+            status.textContent = '⚠️ ' + err.message + ' — allow location permission and use http://localhost (or HTTPS).';
+            document.getElementById('gps-btn').disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+    );
+}
+</script>
+</body>
+</html>

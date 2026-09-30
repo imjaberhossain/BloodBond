@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset password · BloodBond</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="font-body flex items-center justify-center min-h-screen px-4">
+<div class="blob w-[400px] h-[400px] bg-rose-600 top-0 left-0"></div>
+<div class="blob w-[350px] h-[350px] bg-indigo-600 bottom-0 right-0"></div>
+
+<div class="glass rounded-3xl shadow-glass p-10 w-full max-w-md relative text-center">
+    <a th:href="@{/}" class="font-display text-2xl font-bold text-white flex items-center gap-2 justify-center">
+        <span>🩸</span> Blood<span class="text-rose-400">Bond</span>
+    </a>
+    <div class="text-5xl mt-6">🔐</div>
+    <h1 class="text-white font-display font-bold text-xl mt-3">Reset password</h1>
+    <p class="text-slate-400 text-sm mt-2">Code sent to <span class="text-slate-200 font-semibold" th:text="${email}"></span>.<br>
+    <span class="text-xs">(Demo mode: the code is also printed in the server console / IntelliJ Run window.)</span></p>
+
+    <div th:if="${error}" class="alert-err mt-6" th:text="${error}"></div>
+    <div th:if="${message}" class="alert-ok mt-6" th:text="${message}"></div>
+
+    <form th:action="@{/auth/reset}" method="post" class="mt-8 space-y-5 text-left">
+        <input type="hidden" name="email" th:value="${email}">
+        <div>
+            <label class="text-sm text-slate-300 block mb-1.5">Reset code</label>
+            <input type="text" name="code" required maxlength="6" minlength="6" inputmode="numeric"
+                   class="input-dark text-center text-2xl tracking-[0.6em] font-display" placeholder="••••••">
+        </div>
+        <div>
+            <label class="text-sm text-slate-300 block mb-1.5">New password</label>
+            <input type="password" name="password" required minlength="6" class="input-dark" placeholder="Min 6 characters">
+        </div>
+        <div>
+            <label class="text-sm text-slate-300 block mb-1.5">Confirm new password</label>
+            <input type="password" name="confirmPassword" required class="input-dark" placeholder="Repeat password">
+        </div>
+        <button type="submit" class="btn-primary w-full justify-center py-3 text-base">Reset password</button>
+    </form>
+</div>
+</body>
+</html>
